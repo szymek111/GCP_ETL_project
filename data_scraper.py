@@ -57,7 +57,7 @@ class GCPUploader:
     
 if __name__ == '__main__':
 
-    with open('wig20_components.csv', newline='\n') as csv_file:
+    with open('wig20_components.csv') as csv_file:
         ticker_list = csv.reader(csv_file)
         for ticker in ticker_list:
             DS_obj = DataScraper(ticker[0])
