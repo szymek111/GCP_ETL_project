@@ -1,6 +1,9 @@
 import yfinance as yf
 import csv
 from google.cloud import storage
+from bs4 import BeautifulSoup
+import requests, os
+import pandas as pd
 
 
 class DataScraper:
@@ -32,7 +35,7 @@ class DataScraper:
 
     def add_df(self):
         self.df.to_sql(name=self.ticker, con=self.engine, if_exists='replace', index=False)
-        return print(f'\'{self.info['shortName']}\' added to database\n')
+        return print(f"'{self.info['shortName']}' added to database\n")
     
 class GCPUploader:
     def __init__(self, bucket_name, source_file_name, destination_blob_name):
@@ -53,10 +56,15 @@ class GCPUploader:
 
     
 if __name__ == '__main__':
-    DS_obj = DataScraper('shell.as')
-    DS_obj.choose_stock()
-    DS_obj.scrap_df()
-    #print(obj.df)
-    DS_obj.df.to_csv('test.csv')
-    GCPU_obj = GCPUploader('bucket-etl-data', 'test.csv', 'test.csv')
-    GCPU_obj.upload_to_gcs()
+
+    with open('wig20_components.csv', newline='\n') as csv_file:
+        ticker_list = csv.reader(csv_file)
+        for ticker in ticker_list:
+            DS_obj = DataScraper(ticker[0])
+            DS_obj.choose_stock()
+            DS_obj.scrap_df()
+            DS_obj.df.to_csv(f'WIG20_bucket/{ticker[0]}.csv')
+            print(f'{DS_obj.info['exchange']}, {DS_obj.info['longName']}')
+
+            GCPU_obj = GCPUploader('bucket-etl-data', f'WIG20_bucket/{ticker[0]}.csv', f'{ticker[0]}.csv')
+            GCPU_obj.upload_to_gcs()
