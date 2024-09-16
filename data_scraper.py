@@ -1,9 +1,6 @@
 import yfinance as yf
 import csv
 from google.cloud import storage
-from bs4 import BeautifulSoup
-import requests, os
-import pandas as pd
 
 
 class DataScraper:
@@ -56,15 +53,32 @@ class GCPUploader:
 
     
 if __name__ == '__main__':
+        
+    ticker_list = ['ALE.WA','ALR.WA','BDX.WA','CDR.WA','CPS.WA','DNP.WA','JSW.WA','KGH.WA','KRU.WA','KTY.WA','LPP.WA','MBK.WA','OPL.WA','PCO.WA','PEO.WA','PGE.WA','PKN.WA','PKO.WA','PZU.WA','SPL.WA']
+    for ticker in ticker_list:
+        DS_obj = DataScraper(ticker)
+        DS_obj.choose_stock()
+        DS_obj.scrap_df()
+        DS_obj.df.to_csv(f'{ticker}.csv')
+        GCPU_obj = GCPUploader('bucket-etl-data', f'{ticker}.csv', f'{ticker}.csv')
+        GCPU_obj.upload_to_gcs()
 
-    with open('wig20_components.csv') as csv_file:
-        ticker_list = csv.reader(csv_file)
-        for ticker in ticker_list:
-            DS_obj = DataScraper(ticker[0])
-            DS_obj.choose_stock()
-            DS_obj.scrap_df()
-            DS_obj.df.to_csv(f'WIG20_bucket/{ticker[0]}.csv')
-            print(f'{DS_obj.info['exchange']}, {DS_obj.info['longName']}')
 
-            GCPU_obj = GCPUploader('bucket-etl-data', f'WIG20_bucket/{ticker[0]}.csv', f'{ticker[0]}.csv')
-            GCPU_obj.upload_to_gcs()
+
+
+
+
+
+
+#                                   ----------TO DO----------    reading ticker list dicectly from csv from cloud storage
+#
+#
+#    with open('gs://europe-central2-composer-de-6e381f4a-bucket/data/wig20_components.csv') as csv_file:           
+#        ticker_list = csv.reader(csv_file)
+#        for ticker in ticker_list:
+#            DS_obj = DataScraper(ticker[0])
+#            DS_obj.choose_stock()
+#            DS_obj.scrap_df()
+#            DS_obj.df.to_csv(f'{ticker[0]}.csv')
+#            GCPU_obj = GCPUploader('bucket-etl-data', f'{ticker[0]}.csv', f'{ticker[0]}.csv')
+#            GCPU_obj.upload_to_gcs()
