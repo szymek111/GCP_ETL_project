@@ -30,9 +30,13 @@ class DataScraper:
         self.engine = engine
         return self.engine
 
-    def add_df(self):
+    def add_df_to_sql(self):
         self.df.to_sql(name=self.ticker, con=self.engine, if_exists='replace', index=False)
         return print(f"'{self.info['shortName']}' added to database\n")
+
+    def insert_column_with_filename(self):
+        self.df.insert(0, "ticker_name", f'{self.ticker}', allow_duplicates=True)
+        return self.df
     
 class GCPUploader:
     def __init__(self, bucket_name, source_file_name, destination_blob_name):
@@ -59,6 +63,7 @@ if __name__ == '__main__':
         DS_obj = DataScraper(ticker)
         DS_obj.choose_stock()
         DS_obj.scrap_df()
+        DS_obj.insert_column_with_filename()
         DS_obj.df.to_csv(f'{ticker}.csv')
         GCPU_obj = GCPUploader('bucket-etl-data', f'{ticker}.csv', f'{ticker}.csv')
         GCPU_obj.upload_to_gcs()

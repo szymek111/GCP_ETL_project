@@ -8,14 +8,17 @@ from datetime import timedelta
 default_args = {
     'start_date': airflow.utils.dates.days_ago(0),
     'retries': 1,
-    'retry_delay': timedelta(minutes=5)
+    'retry_delay': timedelta(minutes=5),
+    'execution_timeout': timedelta(seconds=500)
 }
 
 dag = DAG('market_data_run',
           default_args=default_args,
           description='Runs an external Python script',
           schedule_interval='@daily',
-          catchup=False)
+          catchup=False
+          )
+        
 
 with dag:
     run_script_task = BashOperator(
@@ -28,6 +31,7 @@ with dag:
     pipeline_name="ETL_stockmarket_first_pipeline",
     instance_name="datafusion-dev",
     task_id="start_ETL_stockmarket_first_pipeline",
+    pipeline_timeout=500
 )
     
     run_script_task >> start_pipeline
