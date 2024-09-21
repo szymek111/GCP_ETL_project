@@ -1,5 +1,4 @@
 import yfinance as yf
-import csv
 from google.cloud import storage
 
 
@@ -32,10 +31,10 @@ class DataScraper:
 
     def add_df_to_sql(self):
         self.df.to_sql(name=self.ticker, con=self.engine, if_exists='replace', index=False)
-        return print(f"'{self.info['shortName']}' added to database\n")
+        return print(f"{self.info['shortName']} added to database\n")
 
     def insert_column_with_filename(self):
-        self.df.insert(0, "ticker_name", f'{self.ticker}', allow_duplicates=True)
+        self.df.insert(0, 'ticker_name', f"{DS_obj.info['shortName']}", allow_duplicates=True)
         return self.df
     
 class GCPUploader:
@@ -64,8 +63,8 @@ if __name__ == '__main__':
         DS_obj.choose_stock()
         DS_obj.scrap_df()
         DS_obj.insert_column_with_filename()
-        DS_obj.df.to_csv(f'{ticker}.csv')
-        GCPU_obj = GCPUploader('bucket-etl-data', f'{ticker}.csv', f'{ticker}.csv')
+        DS_obj.df.to_csv(f"{DS_obj.info['shortName']}.csv")
+        GCPU_obj = GCPUploader('bucket-etl-data', f"{DS_obj.info['shortName']}.csv", f"{DS_obj.info['shortName']}.csv")
         GCPU_obj.upload_to_gcs()
 
 
