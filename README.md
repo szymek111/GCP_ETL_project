@@ -1,10 +1,10 @@
-PROJECT ONGOING
+# SAMPLE ETL PROJECT (ONGOING)
 
 ![Flow](assets/flow.png)
 
-
+### Extract Data(Python)
 <details>
-  <summary>(Python code for data extract)</summary>
+  <summary><span style="color:#ffcf3f">(Python code for data extract)</span></summary>
   
 ```python
 import yfinance as yf
@@ -79,15 +79,38 @@ if __name__ == '__main__':
 </details>
 
 
+Starts with a Python script (running within Airflow/Cloud Composer) that extracts data and sends it to Cloud Storage. It collecting raw data that needs to be temporarily stored before processing.
 
+### Cloud Storage → Cloud Data Fusion
+The data is moved from Cloud Storage to Cloud Data Fusion. Cloud Data Fusion will transform and clean the data.
+
+### Transform and Load Data (Cloud Data Fusion → BigQuery)
+After the transformation, Cloud Data Fusion loads the cleaned data into BigQuery for large-scale data storage and analysis.
+
+### Divide the Tables (BigQuery)
+The data being divided into separate tables for each company. This is done via SQL queries running within BigQuery, which seems appropriate for organizing the data based on individual companies (tickers).
+
+### BigQuery → Looker
+The data is then used in Looker for visualization and reporting to generate dashboards and insights from the data in BigQuery.
+
+
+
+# Loaded temporary raw data to 'bucket'
 ![Bucket Data](assets/bucket_etl_data.png)
 
 
+# Cloud Data Fusion flow
 ![Cloud Data Fusion](assets/wig_20_pipeline.png)
 
 
+# Loaded dataset
+![Cloud Data Fusion](assets/bigquery_dataset.png)
+
+
+# Automated Airflow
+
 <details>
-  <summary>(DAG file for airflow engine)</summary>
+  <summary><span style="color:#ffcf3f">(DAG file for airflow engine)</span></summary>
   
 ```python
 from airflow import DAG
@@ -178,8 +201,10 @@ run_script_task >> start_pipeline >> find_companies >> create_tables_task
 ```
 </details>
 
-
-
-![Cloud Data Fusion](assets/bigquery_dataset.png)
-
 ![Cloud Data Fusion](assets/airflow.png)
+
+
+
+
+# ...ongoing...
+tbd
