@@ -6,7 +6,7 @@ from airflow.operators.python import PythonOperator
 from google.cloud import bigquery
 from datetime import timedelta, datetime
 
-# Parametry
+# Parameters
 PROJECT_ID = 'keen-quest-434917-s4'
 DATASET_ID = 'stockmarket_dataset'
 TABLE_ID = 'WIG20_table'
@@ -25,7 +25,7 @@ dag = DAG('market_data_run',
           catchup=False
           )
 
-# Zadanie 1: Znalezienie unikalnych spółek
+# SQL task 1: Find unique companies
 find_companies_query = f"""
     SELECT DISTINCT ticker_name
     FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`;
@@ -38,7 +38,7 @@ find_companies = BigQueryExecuteQueryOperator(
     dag=dag,
 )
 
-# Funkcja Python do tworzenia tabel per spółka
+# Python script for table creation per company
 def create_company_tables():
     client = bigquery.Client()
     query = f"""
@@ -49,30 +49,29 @@ def create_company_tables():
     tickers = [row['ticker_name'] for row in query_job]
 
     for ticker in tickers:
-        ticker_safe = ticker.replace('.', '_')
         create_table_query = f"""
-            CREATE OR REPLACE TABLE `{PROJECT_ID}.{DATASET_ID}.{ticker_safe}_table` AS
+            CREATE OR REPLACE TABLE `{PROJECT_ID}.{DATASET_ID}.{ticker}_table` AS
             SELECT *
             FROM `{PROJECT_ID}.{DATASET_ID}.{TABLE_ID}`
             WHERE ticker_name = '{ticker}';
         """
         client.query(create_table_query)
 
-# Zadanie 2: Tworzenie tabel dla każdej spółki
+# SQL task 2: Creating table for each company
 create_tables_task = PythonOperator(
     task_id='create_tables',
     python_callable=create_company_tables,
     dag=dag,
 )
 
-# Uruchomienie zewnętrznego skryptu Pythona
+# Run external Python script
 run_script_task = BashOperator(
     task_id='extract_data',
     bash_command='python /home/airflow/gcs/dags/scripts/data_scraper.py',
     dag=dag,
 )
 
-# Uruchomienie pipeline'a Data Fusion
+# Run pipeline Data Fusion
 start_pipeline = CloudDataFusionStartPipelineOperator(
     location="europe-north1",
     pipeline_name="wig20_pipeline",
@@ -82,5 +81,5 @@ start_pipeline = CloudDataFusionStartPipelineOperator(
     dag=dag
 )
 
-# Definiowanie kolejności zadań
+# Task order
 run_script_task >> start_pipeline >> find_companies >> create_tables_task
